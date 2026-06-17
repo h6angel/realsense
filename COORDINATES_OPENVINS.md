@@ -78,9 +78,10 @@ camera_link (ROS: X前 Y左 Z上)
 | 左目（主相机 cam0） | `/camera/camera/infra1/image_rect_raw` | `camera_infra1_optical_frame` |
 | 右目（cam1，立体） | `/camera/camera/infra2/image_rect_raw` | `camera_infra2_optical_frame` |
 | 深度（原始） | `/camera/camera/depth/image_rect_raw` | `camera_depth_optical_frame` |
-| 对齐 RGB 的深度 | `/camera/camera/aligned_depth_to_color/image_raw` | `camera_aligned_depth_to_color_optical_frame` |
-| RGB | `/camera/camera/color/image_raw` | `camera_color_optical_frame` |
+| 点云（Ego-Planner 等） | `/camera/camera/depth/color/points` | 与深度光学系一致（默认无 RGB 着色） |
 | 融合 IMU | `/camera/camera/imu` | `camera_imu_optical_frame` |
+| 对齐 RGB 的深度 | `/camera/camera/aligned_depth_to_color/image_raw` | 仅 `enable_color` + `align_depth.enable` 时存在 |
+| RGB | `/camera/camera/color/image_raw` | 仅 `enable_color:=true` 时存在 |
 | 陀螺仪（未融合） | `/camera/camera/gyro/sample` | `camera_gyro_optical_frame` |
 | 加速度计（未融合） | `/camera/camera/accel/sample` | `camera_accel_optical_frame` |
 
@@ -158,6 +159,8 @@ ros2 run tf2_tools view_frames
 
 ### 6.1 传感器选择（D435i + 当前 launch）
 
+默认 `rs_launch.py`：**彩色与 align_depth 关闭**；**点云** `/camera/camera/depth/color/points` 开启（`pointcloud.enable`，无 RGB 纹理）。需要彩色或 `aligned_depth_to_color` 时：`enable_color:=true align_depth.enable:=true`。
+
 | OpenVINS | RealSense 推荐 |
 |----------|----------------|
 | `cam0` | `/camera/camera/infra1/image_rect_raw`（左目，90Hz） |
@@ -214,7 +217,7 @@ ros2 topic echo /camera/camera/infra1/camera_info --once
 ros2 topic echo /camera/camera/infra2/camera_info --once
 ```
 
-`distortion_model: radtan`，`resolution: [640, 480]`（与 launch 中 90Hz 配置一致）。
+`distortion_model: radtan`，`resolution: [640, 360]`（与 launch 中 `depth_module.infra_profile:=640x360x90` 一致）。
 
 ### 6.4 OpenVINS 对变换的定义
 
